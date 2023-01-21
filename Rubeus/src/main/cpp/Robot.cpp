@@ -67,6 +67,7 @@ public:
     long direction = navxHeadingToEncoderTicks();
     float dx = xbox.GetLeftX();
     float dy = xbox.GetLeftY();
+    int xboxPOV = xbox.GetPOV();
     float hypotenuse = sqrt(dx * dx + dy * dy);
     hypotenuse *= XBOX_SPEEDLIMIT;
     double joystickDir = atan(dy/dx);
@@ -79,7 +80,10 @@ public:
       mainSwerve.SetDirection(smartLoop(direction)); // 0 the entire drive
       mainSwerve.MovePercent(hypotenuse);
     }
-    else{
+    else if (xboxPOV != 0) {
+      mainSwerve.Orient(xboxPOV);
+    }
+    else {
       mainSwerve.SetDirection(0);
       mainSwerve.MovePercent(0);
     }
