@@ -17,8 +17,9 @@
 
 SwerveModule frontLeftSwerve (
   new SparkMotor(FRONT_LEFT_SPEED),
-  new SparkMotor(FRONT_LEFT_DIREC),
+  new SparkMotor(FRONT_LEFT_DIREC), 
   FRONT_LEFT_CANCODER,
+  1, 
   2048 + FRONT_LEFT_OFFSET
 );
 
@@ -26,6 +27,7 @@ SwerveModule frontRightSwerve (
   new SparkMotor(FRONT_RIGHT_SPEED),
   new SparkMotor(FRONT_RIGHT_DIREC),
   FRONT_RIGHT_CANCODER,
+  2, 
   2048 + FRONT_RIGHT_OFFSET
 );
 
@@ -33,6 +35,7 @@ SwerveModule mainSwerve (
   new SparkMotor(BACK_LEFT_SPEED),
   new SparkMotor(BACK_LEFT_DIREC),
   BACK_LEFT_CANCODER,
+  4, 
   BACK_LEFT_OFFSET
 );
 
@@ -40,6 +43,7 @@ SwerveModule backRightSwerve (
   new SparkMotor(BACK_RIGHT_SPEED),
   new SparkMotor(BACK_RIGHT_DIREC),
   BACK_RIGHT_CANCODER,
+  3, 
   BACK_RIGHT_OFFSET
 );
 
@@ -67,6 +71,7 @@ public:
     long direction = navxHeadingToEncoderTicks();
     float dx = xbox.GetLeftX();
     float dy = xbox.GetLeftY();
+    int xboxPOV = xbox.GetPOV();
     float hypotenuse = sqrt(dx * dx + dy * dy);
     hypotenuse *= XBOX_SPEEDLIMIT;
     double joystickDir = atan(dy/dx);
@@ -78,6 +83,9 @@ public:
     if ((dx * dx + dy * dy) > XBOX_DEADBAND * XBOX_DEADBAND){
       mainSwerve.SetDirection(smartLoop(direction)); // 0 the entire drive
       mainSwerve.MovePercent(hypotenuse);
+    }
+    else if (xboxPOV != 0) {
+      mainSwerve.Orient(XboxPOV);
     }
     else{
       mainSwerve.SetDirection(0);
