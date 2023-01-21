@@ -53,22 +53,28 @@ class SwerveModule {
      * Configured offset.
      */
     double encoderOffset;
-
+    
+    /**
+     * The 'role'; Key:  Frontleft = 1, Frontright = 2, Backright = 3, Backleft = 4
+     */
+    short swerveRole;
 public:
     /**
      * Constructor
      @param speedMotor The motor to use for wheel speed control
      @param directionMotor The motor to use for wheel direction control
      @param CanCoderID The CAN id of the CANCoder
+     @param role The 'role' for the module (i.e. Frontright, Frontleft, etc.)
      @param offset The offset of the wheel, in encoder ticks
      @param speedInverted Whether or not to invert the wheel speed motor
      @param direcInverted Whether or not to invert the wheel direction motor
      */
-    SwerveModule(BaseMotor* speedMotor, BaseMotor* directionMotor, int CanCoderID, double offset, bool speedInverted=false, bool direcInverted=false) {
+    SwerveModule(BaseMotor* speedMotor, BaseMotor* directionMotor, int CanCoderID, short role, double offset, bool speedInverted=false, bool direcInverted=false) {
         encoderOffset = offset;
         speed = speedMotor;
         direction = directionMotor;
         cancoder = new CANCoder {CanCoderID};
+        swerveRole = role;
 
         directionController = new PIDController (direction);
         directionController -> constants.P = 0.0005;
@@ -89,6 +95,7 @@ public:
         isLinked = true;           
         linkSwerve = LinkSwerve; 
     }
+    
     long rotationLength = 4096;
     double loopize(double set, double cur){
         if (std::abs(set - cur) >= rotationLength/2){
@@ -112,9 +119,10 @@ public:
             speed -> SetInverted();
         }
         directionController -> SetPosition(targetPos);
+        
         directionController -> Update(GetDirection());
         if (isLinked){
-            linkSwerve -> SetDirection(targetPos);
+            linkSwerve -> SetDirection(targetPos, orientPos);
         }
     }
 
@@ -140,7 +148,18 @@ public:
             linkSwerve -> ApplySpeed();
         }
     } 
-
+    
+    void Orient(double angle) {
+        if (angle != 0) {
+            if (angle < 180) {
+                SetDirection(smartLoop(4096/360*(270 - (role * 90))));
+            }
+            else {
+                SetDirection(smartLoop(4096/360*(360 - (role * 90))));
+            }
+        }
+        
+    }
     /**
      * Get the current (physical) direction of the module
      */
