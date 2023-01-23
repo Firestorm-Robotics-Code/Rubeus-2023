@@ -84,8 +84,8 @@ public:
       mainSwerve.SetDirection(smartLoop(direction)); // 0 the entire drive
       mainSwerve.MovePercent(hypotenuse);
     }
-    else if (xboxPOV != 0) {
-      mainSwerve.Orient(XboxPOV);
+    else if (!mainSwerve.Orient((4096/360) * xboxPOV, navxHeadingToEncoderTicks())) {
+      
     }
     else{
       mainSwerve.SetDirection(0);

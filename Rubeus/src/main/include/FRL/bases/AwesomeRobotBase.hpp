@@ -40,7 +40,6 @@ public:
 
     /**
      * Override this as your initial setup.
-
      * Called once when the robot program starts.
      */
     virtual void Init(){
@@ -67,22 +66,17 @@ public:
 
     /**
      * Override this for code that needs to run asynchronously at hz.
-
      * Called asynchronously at a frequency - safe to have infinite loops, because it's killed on end
      * MEMORY SAFETY NOTE: BECAUSE THIS CAN BE CANCELED AT ANY TIME, NEVER ALLOCATE NEW MEMORY INSIDE IT! A MEMORY LEAK WILL OCCUR!
      * Even if memory is freed in End(), being killed during a malloc() can leave the internal linked-list of free memory blocks in an "inconsistent state",
      * which could potentially crash the entire process - maybe even force a kernel panic on the RoboRio.
      * Lots of bad things happen when you play with memory inside threads, no matter what.
-
      * BUG NOTE: There is a chance the CTRE and Rev libraries will allocate memory on callug notes to their libraries.
      * If they do, we might start seeing a stream of seemingly random segfaults (or even kernel panics).
      * That is probably caused by bad Care Of Memory.
-
      * Okayish safety solution: Use Start() and the constructor and the default constructors to allocate everything, and do nothing but call safe or safe-ish functions here.
      * Good safety solution: don't ever directly call library functions in this thread, and instead use std::atomics to store things like motor speeds, to be updated synchronously.
-
      * It is safe to use infinite while loops in here! The thread handling intentionally permits it.
-
      * DEPRECATED: pthread_cancel doesn't work properly on the RoboRIO so threads are deprecated for now.
      */
     virtual void Thread() {
@@ -91,7 +85,6 @@ public:
 
     /**
      * Override to clean-up.
-
      * Called when the current mode exits - e.g. going from autonomous to teleoperated, or disabling the robot.
      */
     virtual void End() {
@@ -102,7 +95,6 @@ public:
 
 /**
  * @author Tyler Clarke
-
  * Concept for robot modes. It's a c++20 feature that allows us to template in the mode types, initialize them, and call functions on them.
  * Really, really powerful. I recommend reading up on it.
  */
@@ -112,7 +104,6 @@ concept RobotModeType = std::is_base_of <RobotMode, T>::value;
 /**
  * @author Tyler Clarke
  * @version 1.0
-
  * Templated class that manages threads, calls the right mode at the right time, and etc.
  */
 template <RobotModeType TeleopModeType, RobotModeType AutonomousModeType, RobotModeType TestModeType, RobotModeType DisabledModeType>
@@ -124,25 +115,21 @@ class AwesomeRobot : public frc::RobotBase {
 
     /**
      * Heap allocated teleop mode object.
-
      * Stack allocation *would* have been better, but I really wanted to be able to say "activeMode == disabled" without having to take a reference every time, and activeMode does in fact have to be a pointer.
      */
     TeleopModeType* teleop = new TeleopModeType;
     /**
      * Heap allocated autonomous mode object
-
      * See {@link teleop}
      */
     AutonomousModeType* autonomous = new AutonomousModeType;
     /**
      * Heap allocated test mode object.
-
      * See {@link teleop}
      */
     TestModeType* test = new TestModeType;
     /**
      * Heap allocated disabled mode object.
-
      * See {@link teleop}
      */
     DisabledModeType* disabled = new DisabledModeType;
@@ -159,7 +146,6 @@ class AwesomeRobot : public frc::RobotBase {
 
     /**
      * The actual thread function
-
      * DEPRECATED: pthread_cancel doesn't work properly on the RoboRIO so threads are deprecated for now.
      @param _robot A void* pointer to the AwesomeRobot object. Necessary because this is static.
      */

@@ -28,7 +28,7 @@ public:
         delete talon;
     }
     
-    void _setInverted(bool invert) {
+    bool SetInverted(bool invert) {
         talon -> SetInverted(invert);
     }
     

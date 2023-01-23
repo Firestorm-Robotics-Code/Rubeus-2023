@@ -35,7 +35,7 @@ public:
         talon -> Set(ControlMode::PercentOutput, speed);
     }
 
-    void _setInverted(bool doInv) {
+    void SetInverted(bool doInv) {
         invert = doInv;
     }
     
