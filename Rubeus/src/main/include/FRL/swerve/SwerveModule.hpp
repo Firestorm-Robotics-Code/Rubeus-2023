@@ -54,14 +54,17 @@ class SwerveModule {
      */
     double encoderOffset;
     
-public:
+    /**
+     * The 'role'; Key:  Frontleft = 1, Frontright = 2, Backright = 3, Backleft = 4
+     */
     short swerveRole;
-    bool readyToOrient = false;
+public:
     /**
      * Constructor
      @param speedMotor The motor to use for wheel speed control
      @param directionMotor The motor to use for wheel direction control
      @param CanCoderID The CAN id of the CANCoder
+     @param role The 'role' for the module (i.e. Frontright, Frontleft, etc.)
      @param offset The offset of the wheel, in encoder ticks
      @param speedInverted Whether or not to invert the wheel speed motor
      @param direcInverted Whether or not to invert the wheel direction motor
@@ -71,8 +74,8 @@ public:
         speed = speedMotor;
         direction = directionMotor;
         cancoder = new CANCoder {CanCoderID};
-        
         swerveRole = role;
+
         directionController = new PIDController (direction);
         directionController -> constants.P = 0.0005;
         //directionController -> constants.I = 0.0001;
@@ -92,41 +95,34 @@ public:
         isLinked = true;           
         linkSwerve = LinkSwerve; 
     }
-
-    double coterminal(double angle) {
-        while (angle >= 360) {
-            angle -= 360;
-        }
-        while (angle < 0) {
-            angle += 360;
-        }
-        return angle;
-    }
     
-        /**
-     * Get the current (physical) direction of the module
-     */
-    long GetDirection() {
-        return smartLoop(cancoder -> GetAbsolutePosition() - encoderOffset);
+    long rotationLength = 4096;
+    double loopize(double set, double cur){
+        if (std::abs(set - cur) >= rotationLength/2){
+            if (set > cur){
+                return -(rotationLength - set + cur);
+            }
+            else{
+                return rotationLength - cur + set;
+            }
+        }
+        else{
+            return set - cur;
+        }
     }
-
-    bool withinDeadband(double num, double dead, double reference = 0) {
-        return reference + num <= reference + dead && reference - num >= reference - dead;
-    }
-
     /**
      * Set the direction of the motor.
      @param targetPos The encoder tick to aim for
-     @param followLink Whether or not to follow its link
-     @param followRole What role to follow
      */
-    
-    void SetDirection(double targetPos, bool followLink = true) {
+    void SetDirection(double targetPos) {
+        if (loopize(GetDirection(), targetPos) > 1024){ // 1024 = 90 degrees
+            speed -> SetInverted();
+        }
         directionController -> SetPosition(targetPos);
+        
         directionController -> Update(GetDirection());
-
-        if (isLinked && followLink){
-            linkSwerve -> SetDirection(targetPos);
+        if (isLinked){
+            linkSwerve -> SetDirection(targetPos, orientPos);
         }
     }
 
@@ -152,45 +148,26 @@ public:
             linkSwerve -> ApplySpeed();
         }
     } 
-
-    /**
-     * Orient the swerve drive 
-     */
     
-    bool allReadyToOrient() {
-        if (swerveRole == 4) {
-            return ((readyToOrient) && (linkSwerve -> readyToOrient) && (linkSwerve -> linkSwerve -> readyToOrient) && (linkSwerve -> linkSwerve -> linkSwerve -> readyToOrient));
-        }
-        return false;
-    }
-
-    bool Orient(int angle, int currentAngle) {
-        if (angle == -1) {        // If the POV is not being currently pressed
-            return true;
-        }
-
-        else {
-            if ((swerveRole == 1 || swerveRole == 3)) {          // If top-left or botton-right
-                SetDirection((4096/360) * 45, false);          // Go at 45 degrees
-                if (withinDeadband(GetDirection(), 3, (4096/360) * 45)) {         // If there
-                    readyToOrient = true;                    // Ready to orient; when all of them are ready, the speed will set
-                }
-            }   
-
+    void Orient(double angle) {
+        if (angle != 0) {
+            if (angle < 180) {
+                SetDirection(smartLoop(4096/360*(270 - (role * 90))));
+            }
             else {
-                SetDirection((4096/360) * 315, false);
-                if (withinDeadband(GetDirection(), 3, (4096/360) * 315)) {
-                    readyToOrient = true;
-                }
-            }
-
-            if (allReadyToOrient()) {
-                
-            }
-
-            if (isLinked) {
-                bool _voidBool = linkSwerve -> Orient(angle, currentAngle);
+                SetDirection(smartLoop(4096/360*(360 - (role * 90))));
             }
         }
+        
+    }
+    /**
+     * Get the current (physical) direction of the module
+     */
+    long GetDirection() {
+        double v = smartLoop(cancoder -> GetAbsolutePosition() - encoderOffset);
+        if (speed -> inversionState){
+            v = smartLoop(2048 + v); // Flip it about the 180
+        }
+        return v;
     }
 };

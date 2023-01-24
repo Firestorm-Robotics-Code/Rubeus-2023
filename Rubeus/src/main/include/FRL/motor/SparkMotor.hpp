@@ -31,7 +31,7 @@ public:
         controls = new _SparkMotorEncoderControlContainer {spark -> GetEncoder(), spark -> GetPIDController()};
     }
 
-    void SetInverted(bool invert) {
+    void _setInverted(bool invert) {
         spark -> SetInverted(invert);
     }
     

@@ -16,17 +16,40 @@ class BaseMotor {
 public:
     /**
      * Set the motor to a percentage value. Range (-1, 1) of max power.
+     @param percent The percentage of total power to run at.
      */
     virtual void SetPercent(double percent) = 0;
     /**
-     * Set the invertion state of the motor
-     @param percent The percentage of total power to run at.
+     * Set the invertion state of the motor. Override this in subclasses.
+     
+     * Doesn't change inversionState!
+     @param invert Whether the motor is inverted or not.
      */
-    virtual void SetInverted(bool invert) = 0;
+    virtual void _setInverted(bool invert) = 0;
     /**
      * Set the PIDF "P" coefficient. Manufacturer software differences mean that this shouldn't be used! Instead, use #PIDController.
      @param kP The P coefficient.
      */
+    
+    /**
+     * Flip the inversion state and return it.
+
+     * Don't override!
+     */
+    bool SetInverted(){
+        inversionState = !inversionState;
+        SetInverted(inversionState);
+        return inversionState;
+    }
+    /**
+     * Set inversion and change the inversion state.
+     
+     * Don't override!
+     */
+    void SetInverted(bool invert){
+        _setInverted(invert);
+        inversionState = invert;
+    }
     virtual void SetP(double kP) = 0;
     /**
      * Set the PIDF "I" coefficient. Manufacturer software differences mean that this shouldn't be used! Instead, use #PIDController.
@@ -75,4 +98,8 @@ public:
     bool IsAtZero() {
         return GetPosition() == 0;
     }
+    /**
+     * Current inversion state. Intended for use with SetInverted().
+     */
+    bool inversionState = false;
 };
