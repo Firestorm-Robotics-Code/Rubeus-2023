@@ -84,9 +84,7 @@ public:
         directionController -> SetCircumference(4096);
         
         speed -> SetInverted(speedInverted);
-        speedInvert = speedInverted;
         direction -> SetInverted(direcInverted);
-        direcInvert = direcInverted;
     }
     
     /**
@@ -171,14 +169,5 @@ public:
             v = smartLoop(2048 + v); // Flip it about the 180
         }
         return v;
-    }
-
-    void brake() {
-        if (swerveRole == 1 || swerveRole == 2) {
-            SetDirection((4096/360) * 180);
-        }
-        else {
-            SetDirection((0));
-        }
     }
 };
