@@ -4,11 +4,11 @@
 */
 #include <FRL/bases/AwesomeRobotBase.hpp>
 #include <FRL/motor/SparkMotor.hpp>
-#include <FRL/swerve/SwerveModule.hpp>
 #include <constants.h>
 #include <frc/XboxController.h>
 #include <AHRS.h>
 #include <frc/smartdashboard/SmartDashboard.h>
+#include <FRL/swerve/SwerveModule.hpp>
 
 #define PI              3.141592
 #define XBOX_DEADBAND   0.05
@@ -53,7 +53,11 @@ AHRS navx {frc::SPI::Port::kMXP}; // Well, obviously, the navx
 double navxOffset = 0;
 
 long navxHeadingToEncoderTicks(){
-  return (navx.GetFusedHeading() - navxOffset) * 4096/360;
+  return (navx.GetFusedHeading() - navxOffset) * (4096/360);
+}
+
+double navxCompassToEncoderTicks(){
+  return (navx.GetCompassHeading() - navxOffset) * (4096/360);
 }
 
 void zeroNavx(){
@@ -82,13 +86,27 @@ public:
     direction += joystickDir * 4096/(2 * PI);
 
     frc::SmartDashboard::PutBoolean("Frontleft ready to orient", frontLeftSwerve.readyToOrient);
+    frc::SmartDashboard::PutBoolean("Frontright ready to orient", frontRightSwerve.readyToOrient);
+    frc::SmartDashboard::PutBoolean("Backleft ready to orient", mainSwerve.readyToOrient);
+    frc::SmartDashboard::PutBoolean("Backright ready to orient", backRightSwerve.readyToOrient);
+
+    frc::SmartDashboard::PutNumber("Navx heading", navxHeadingToEncoderTicks());
+
+    frc::SmartDashboard::PutNumber("Frontleft position", frontLeftSwerve.GetDirection());
+    frc::SmartDashboard::PutNumber("Frontright position", frontRightSwerve.GetDirection());
+    frc::SmartDashboard::PutNumber("Backright position", backRightSwerve.GetDirection());
+    frc::SmartDashboard::PutNumber("Backleft position", mainSwerve.GetDirection());
+
+
+    frc::SmartDashboard::PutNumber("Xbox heading", xboxPOV * (4096/360));
     if (xbox.GetYButton()) {
       mainSwerve.brake();
     }
-    else if (!mainSwerve.Orient(xboxPOV * (4096/360), navx.GetCompassHeading() * (4096/360))) {
+    else if (!mainSwerve.Orient(xboxPOV * (4096/360), navxHeadingToEncoderTicks())) {
 
     }
     else if ((dx * dx + dy * dy) > XBOX_DEADBAND * XBOX_DEADBAND){
+      mainSwerve.resetInvert();
       mainSwerve.SetDirection(smartLoop(direction)); // 0 the entire drive
       mainSwerve.MovePercent(hypotenuse);
     }

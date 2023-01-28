@@ -164,6 +164,9 @@ public:
     void resetInvert() {
         speed -> SetInverted(speedInvert);
         direction -> SetInverted(direcInvert);
+        if (isLinked) {
+            linkSwerve -> resetInvert();
+        }
     }
 
     /**
@@ -191,23 +194,30 @@ public:
         }
 
         else {
-            if ((swerveRole == 1 || swerveRole == 3)) {          // If top-left or botton-right
+            if ((swerveRole == 2 || swerveRole == 4)) {          // If top-left or botton-right
                 SetDirection((4096/360) * 45, false);          // Go at 45 degrees
-                if (withinDeadband(GetDirection(), 3, (4096/360) * 45)) {         // If there
+                if (withinDeadband(GetDirection(), 250, (4096/360) * 45)) {         // If there
                     readyToOrient = true;                    // Ready to orient; when all of them are ready, the speed will set
+                }
+                else {
+                    readyToOrient = false;
                 }
             }   
 
             else {
                 SetDirection((4096/360) * 315, false);
-                if (withinDeadband(GetDirection(), 3, (4096/360) * 315)) {
+                if (withinDeadband(GetDirection(), 250, (4096/360) * 315)) {
                     readyToOrient = true;
+                }
+                else {
+                    readyToOrient = false;
                 }
             }
 
-            if (allReadyToOrient()) {
-                target = smartLoop(angle, currentAngle);
-                if (!withinDeadband(currentAngle, 5, target)) {
+            if (allReadyToOrient()) { 
+                target = directionController -> loopize(angle, smartLoop(currentAngle));
+                frc::SmartDashboard::PutNumber("Target", target);
+                if (!withinDeadband(currentAngle, 250, target)) {
                     if (target < 0) {
                         if (swerveRole == 1 || swerveRole == 3) {
                             speed -> SetInverted(!speedInvert);
@@ -220,21 +230,24 @@ public:
                     }
                     speed -> SetPercent(.2);
                 }
+                else {
+                    speed -> SetPercent(0);
+                }
             }
 
             if (isLinked) {
                 bool _voidBool = linkSwerve -> Orient(angle, currentAngle);    // Makes the linkSwerve act like a void, because it kinda is
             }
-            return withinDeadband(angle, 5, currentAngle);
+            return withinDeadband(angle, 100, currentAngle);
         }
     }
 
     void brake() {
         if (swerveRole == 1 || swerveRole == 2) {
-            SetDirection((4096/360) * 180);
+            SetDirection((4096/360) * 180, false);
         }
         else {
-            SetDirection((0));
+            SetDirection(0, false);
         }
         if (isLinked) {
             linkSwerve -> brake();
