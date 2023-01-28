@@ -80,12 +80,17 @@ public:
     }
     joystickDir = PI - joystickDir; // Flip it? I think?
     direction += joystickDir * 4096/(2 * PI);
-    if ((dx * dx + dy * dy) > XBOX_DEADBAND * XBOX_DEADBAND){
+
+    frc::SmartDashboard::PutBoolean("Frontleft ready to orient", frontLeftSwerve.readyToOrient);
+    if (xbox.GetYButton()) {
+      mainSwerve.brake();
+    }
+    else if (!mainSwerve.Orient(xboxPOV * (4096/360), navx.GetCompassHeading() * (4096/360))) {
+
+    }
+    else if ((dx * dx + dy * dy) > XBOX_DEADBAND * XBOX_DEADBAND){
       mainSwerve.SetDirection(smartLoop(direction)); // 0 the entire drive
       mainSwerve.MovePercent(hypotenuse);
-    }
-    else if (xboxPOV != 0) {
-      mainSwerve.Orient(XboxPOV);
     }
     else{
       mainSwerve.SetDirection(0);
