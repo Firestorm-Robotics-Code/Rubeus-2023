@@ -103,7 +103,7 @@ public:
       mainSwerve.brake();
     }
     else if (!mainSwerve.Orient(xboxPOV * (4096/360), navxHeadingToEncoderTicks())) {
-
+      
     }
     else if ((dx * dx + dy * dy) > XBOX_DEADBAND * XBOX_DEADBAND){
       mainSwerve.resetInvert();

@@ -164,9 +164,6 @@ public:
     void resetInvert() {
         speed -> SetInverted(speedInvert);
         direction -> SetInverted(direcInvert);
-        if (isLinked) {
-            linkSwerve -> resetInvert();
-        }
     }
 
     /**
@@ -181,7 +178,7 @@ public:
     }
 
     /**
-     * Orient the swerve drive 
+     * Orient the swerve drive.Returns true if it's at its desired position, or if the POV button isn't being pressed down.
      @param angle The desired angle (in encoder ticks)
      @param currentAngle The current navX angle of the robot (also in encoder ticks)
      */
@@ -194,30 +191,23 @@ public:
         }
 
         else {
-            if ((swerveRole == 2 || swerveRole == 4)) {          // If top-left or botton-right
-                SetDirection((4096/360) * 45, false);          // Go at 45 degrees
-                if (withinDeadband(GetDirection(), 250, (4096/360) * 45)) {         // If there
+            if ((swerveRole == 1 || swerveRole == 3)) {          // If top-left or botton-right
+                SetDirection((4096/360) * 315, false);          // Go at 45 degrees
+                if (withinDeadband(GetDirection(), 15, (4096/360) * 45)) {         // If there
                     readyToOrient = true;                    // Ready to orient; when all of them are ready, the speed will set
-                }
-                else {
-                    readyToOrient = false;
                 }
             }   
 
             else {
-                SetDirection((4096/360) * 315, false);
-                if (withinDeadband(GetDirection(), 250, (4096/360) * 315)) {
+                SetDirection((4096/360) * 45, false);
+                if (withinDeadband(GetDirection(), 15, (4096/360) * 315)) {
                     readyToOrient = true;
-                }
-                else {
-                    readyToOrient = false;
                 }
             }
 
-            if (allReadyToOrient()) { 
-                target = directionController -> loopize(angle, smartLoop(currentAngle));
-                frc::SmartDashboard::PutNumber("Target", target);
-                if (!withinDeadband(currentAngle, 250, target)) {
+            if (allReadyToOrient()) {
+                target = smartLoop(angle, currentAngle);
+                if (!withinDeadband(currentAngle, 15, target)) {
                     if (target < 0) {
                         if (swerveRole == 1 || swerveRole == 3) {
                             speed -> SetInverted(!speedInvert);
@@ -230,25 +220,28 @@ public:
                     }
                     speed -> SetPercent(.2);
                 }
-                else {
-                    speed -> SetPercent(0);
-                }
             }
 
             if (isLinked) {
                 bool _voidBool = linkSwerve -> Orient(angle, currentAngle);    // Makes the linkSwerve act like a void, because it kinda is
             }
-            return withinDeadband(angle, 100, currentAngle);
+            return withinDeadband(currentAngle, 5, angle);
         }
     }
 
+    /**
+     * Makes the swerve module 'brake' by setting the wheels in a position where it has a lot of traction.
+    */
+
     void brake() {
-        if (swerveRole == 1 || swerveRole == 2) {
-            SetDirection((4096/360) * 180, false);
+        if (swerveRole == 1 || swerveRole == 3) {
+            SetDirection((4096/360) * 45, false);
         }
         else {
-            SetDirection(0, false);
+            SetDirection((4096/360) * 315, false);
         }
+
+        speed -> SetPercent(0);
         if (isLinked) {
             linkSwerve -> brake();
         }
