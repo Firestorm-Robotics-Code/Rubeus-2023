@@ -74,4 +74,8 @@ public:
     void SetSpeedPID(double speed){
         controls -> pid.SetReference(speed, rev::CANSparkMax::ControlType::kVelocity);
     }
+
+    void ConfigIdleMode(rev::CANSparkMax::IdleMode idleMode) {
+        spark -> SetIdleMode(idleMode);
+    }
 };
