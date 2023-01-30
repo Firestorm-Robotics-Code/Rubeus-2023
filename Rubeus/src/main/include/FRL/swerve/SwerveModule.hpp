@@ -94,6 +94,8 @@ public:
         speedInvert = speedInverted;
         direction -> SetInverted(direcInverted);
         direcInvert = direcInverted;
+
+        speed -> ConfigIdleToBrake();
     }
     
     /**
@@ -196,6 +198,9 @@ public:
                 if (withinDeadband(GetDirection(), 15, (4096/360) * 45)) {         // If there
                     readyToOrient = true;                    // Ready to orient; when all of them are ready, the speed will set
                 }
+                else {
+                    readyToOrient = false;
+                }
             }   
 
             else {
@@ -203,10 +208,13 @@ public:
                 if (withinDeadband(GetDirection(), 15, (4096/360) * 315)) {
                     readyToOrient = true;
                 }
+                else {
+                    readyToOrient = false;
+                }
             }
 
             if (allReadyToOrient()) {
-                target = smartLoop(angle, currentAngle);
+                target = directionController -> loopize(angle, currentAngle);
                 if (!withinDeadband(currentAngle, 15, target)) {
                     if (target < 0) {
                         if (swerveRole == 1 || swerveRole == 3) {
@@ -219,6 +227,9 @@ public:
                         }
                     }
                     speed -> SetPercent(.2);
+                }
+                else {
+                    speed -> SetPercent(0);
                 }
             }
 

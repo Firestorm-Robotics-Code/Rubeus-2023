@@ -49,6 +49,7 @@ SwerveModule backRightSwerve (
 
 
 frc::XboxController xbox {4};
+frc::GenericHID buttonboard {5};
 AHRS navx {frc::SPI::Port::kMXP}; // Well, obviously, the navx
 double navxOffset = 0;
 
@@ -99,10 +100,10 @@ public:
 
 
     frc::SmartDashboard::PutNumber("Xbox heading", xboxPOV * (4096/360));
-    if (xbox.GetYButton()) {
+    if (buttonboard.GetRawButton(7)) {
       mainSwerve.brake();
     }
-    else if (!mainSwerve.Orient(xboxPOV * (4096/360), navxHeadingToEncoderTicks())) {
+    else if (!mainSwerve.Orient(xboxPOV * (4096/360), direction)) {
       
     }
     else if ((dx * dx + dy * dy) > XBOX_DEADBAND * XBOX_DEADBAND){
